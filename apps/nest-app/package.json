@@ -7,6 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
+    "type": "module",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
     "start:dev": "nest start --watch",
@@ -57,7 +58,9 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.7.3",
     "typescript-eslint": "^8.20.0",
-    "vitest": "^4.1.10"
+    "unplugin-swc": "^1.5.10",
+    "vitest": "^4.1.10",
+    "vitest-mock-extended": "^5.1.1"
   },
   "jest": {
     "moduleFileExtensions": [

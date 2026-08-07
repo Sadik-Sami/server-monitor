@@ -1,10 +1,12 @@
-import path from 'path';
+import swc from 'unplugin-swc';
 import { defineConfig } from 'vitest/config';
 
+/** @type {import('vite').UserConfig} */
 export default defineConfig({
   test: {
     globals: true,
     environment: 'node',
+    setupFiles: ['./vitest.setup.ts'],
     include: ['src/**/*.spec.ts'],
     exclude: ['node_modules', 'dist', 'test'],
     coverage: {
@@ -23,9 +25,5 @@ export default defineConfig({
       ],
     },
   },
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
+  plugins: [swc.vite()],
 });
