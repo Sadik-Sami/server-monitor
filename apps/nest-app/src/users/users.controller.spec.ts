@@ -90,7 +90,7 @@ describe('UsersController', () => {
   it('should remove a user', async () => {
     const user = {} as any;
     service.remove.mockResolvedValue(user);
-    
+
     const result = await controller.remove('1');
 
     expect(service.remove).toHaveBeenCalledTimes(1);
