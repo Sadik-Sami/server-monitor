@@ -28,7 +28,11 @@ describe('UsersService', () => {
   });
 
   it('should create a user', async () => {
-    const user = {} as any;
+    const user: User = {
+      id: '1',
+      name: 'John Doe',
+      email: 'john.doe@example.com',
+    };
     repo.save.mockResolvedValue(user);
 
     const result = await service.create({

@@ -1,4 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { DeleteResult } from 'typeorm';
 import { UsersController } from './users.controller';
 import { UsersService } from './users.service';
 
@@ -88,13 +89,13 @@ describe('UsersController', () => {
   });
 
   it('should remove a user', async () => {
-    const user = {} as any;
-    service.remove.mockResolvedValue(user);
+    const result: DeleteResult = { raw: [], affected: 1 };
+    service.remove.mockResolvedValue(result);
 
-    const result = await controller.remove('1');
+    const res = await controller.remove('1');
 
     expect(service.remove).toHaveBeenCalledTimes(1);
     expect(service.remove).toHaveBeenCalledWith('1');
-    expect(result).toEqual(user);
+    expect(res).toEqual(result);
   });
 });

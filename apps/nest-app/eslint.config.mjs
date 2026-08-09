@@ -31,6 +31,7 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'warn',
       '@typescript-eslint/no-unsafe-argument': 'warn',
       '@typescript-eslint/unbound-method': 'error',
+      '@typescript-eslint/no-namespace': ['error', { allowDeclarations: true }],
       "prettier/prettier": ["error", { endOfLine: "auto" }],
     },
   },
