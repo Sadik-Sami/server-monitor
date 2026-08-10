@@ -6,31 +6,39 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export enum RemoteServerStatus {
-  ONLINE = 'online',
-  OFFLINE = 'offline',
+export enum LogSourceType {
+  ZABIX = 'zabbix',
+  PROMETHEUS = 'prometheus',
+}
+
+export enum LogSourceStatus {
+  ACTIVE = 'active',
+  INACTIVE = 'inactive',
   UNKNOWN = 'unknown',
 }
 
 @Entity()
-export class RemoteServer {
+export class LogSource {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
   @Column()
-  name: string;
+  ownerId: string;
 
   @Column()
-  ownerId: string;
+  name: string;
 
   @Column({ nullable: true })
   description?: string;
 
-  @Column({ type: 'simple-json' })
-  config: Record<string, any>;
+  @Column()
+  status: LogSourceStatus;
 
   @Column()
-  status: RemoteServerStatus;
+  type: LogSourceType;
+
+  @Column({ type: 'simple-json' })
+  config: Record<string, any>;
 
   @CreateDateColumn()
   createdAt: Date;

@@ -1,33 +1,34 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { RemoteServersService } from './remote-servers.service';
+import { LogSourcesService } from './log-sources.service';
 import {
-  RemoteServer,
-  RemoteServerStatus,
-} from './entities/remote-server.entity';
-import { CreateRemoteServerDto } from './dto/create-remote-server.dto';
+  LogSource,
+  LogSourceStatus,
+  LogSourceType,
+} from './entities/log-source.entity';
+import { CreateLogSourceDto } from './dto/create-log-source.dto';
 import { Repository } from 'typeorm';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { NotFoundException } from '@nestjs/common';
 import { DeleteResult } from 'typeorm/browser';
 
-describe('RemoteServersService', () => {
-  let service: RemoteServersService;
-  let repo: Mocked<Repository<RemoteServer>>;
+describe('LogSourcesService', () => {
+  let service: LogSourcesService;
+  let repo: Mocked<Repository<LogSource>>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
-        RemoteServersService,
+        LogSourcesService,
         {
-          provide: getRepositoryToken(RemoteServer),
-          useValue: mock<Repository<RemoteServer>>(),
+          provide: getRepositoryToken(LogSource),
+          useValue: mock<Repository<LogSource>>(),
         },
       ],
     }).compile();
 
-    service = module.get<RemoteServersService>(RemoteServersService);
-    repo = module.get<Mocked<Repository<RemoteServer>>>(
-      getRepositoryToken(RemoteServer),
+    service = module.get<LogSourcesService>(LogSourcesService);
+    repo = module.get<Mocked<Repository<LogSource>>>(
+      getRepositoryToken(LogSource),
     );
   });
 
@@ -37,18 +38,19 @@ describe('RemoteServersService', () => {
   });
 
   describe('create', () => {
-    it('should create a new remote server', async () => {
+    it('should create a new log source', async () => {
       // Arrange
-      const props: CreateRemoteServerDto = {
-        name: 'Test Server',
-        description: 'A test server',
-        config: { region: 'us-east-1' },
+      const props: CreateLogSourceDto = {
+        name: 'Test Source',
+        description: 'A test source',
+        config: { endpoint: 'http://localhost:8080' },
+        type: LogSourceType.ZABIX,
       };
-      const created: RemoteServer = {
+      const created: LogSource = {
         ...props,
         id: '1',
         ownerId: '1',
-        status: RemoteServerStatus.UNKNOWN,
+        status: LogSourceStatus.UNKNOWN,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -62,7 +64,7 @@ describe('RemoteServersService', () => {
       expect(repo.create).toHaveBeenCalledWith({
         ...props,
         ownerId: '1',
-        status: RemoteServerStatus.UNKNOWN,
+        status: LogSourceStatus.UNKNOWN,
       });
       expect(repo.save).toHaveBeenCalledTimes(1);
       expect(repo.save).toHaveBeenCalledWith(created);
@@ -71,100 +73,104 @@ describe('RemoteServersService', () => {
   });
 
   describe('findAll', () => {
-    it('should return all remote servers for a given owner', async () => {
+    it('should return all log sources for a given owner', async () => {
       // Arrange
-      const remoteServers = [
+      const logSources = [
         {
           id: '1',
-          name: 'Test Server 1',
-          description: 'A test server',
-          config: { region: 'us-east-1' },
+          name: 'Test Source 1',
+          description: 'A test source',
+          config: { endpoint: 'http://localhost:8080' },
           ownerId: '1',
-          status: RemoteServerStatus.UNKNOWN,
+          status: LogSourceStatus.UNKNOWN,
+          type: LogSourceType.ZABIX,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
         {
           id: '2',
-          name: 'Test Server 2',
-          description: 'Another test server',
-          config: { region: 'us-west-1' },
+          name: 'Test Source 2',
+          description: 'Another test source',
+          config: { endpoint: 'http://localhost:9090' },
           ownerId: '1',
-          status: RemoteServerStatus.UNKNOWN,
+          status: LogSourceStatus.UNKNOWN,
+          type: LogSourceType.PROMETHEUS,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       ];
-      repo.find.mockResolvedValue(remoteServers);
+      repo.find.mockResolvedValue(logSources);
 
       const result = await service.findAll('1');
 
       // Assert
       expect(repo.find).toHaveBeenCalledTimes(1);
       expect(repo.find).toHaveBeenCalledWith({ where: { ownerId: '1' } });
-      expect(result).toEqual(remoteServers);
+      expect(result).toEqual(logSources);
     });
   });
 
   describe('findOne', () => {
-    it('should return a remote server by id and ownerId', async () => {
+    it('should return a log source by id and ownerId', async () => {
       // Arrange
-      const remoteServer = {
+      const logSource = {
         id: '1',
-        name: 'Test Server',
-        description: 'A test server',
-        config: { region: 'us-east-1' },
+        name: 'Test Source',
+        description: 'A test source',
+        config: { endpoint: 'http://localhost:8080' },
         ownerId: '1',
-        status: RemoteServerStatus.UNKNOWN,
+        status: LogSourceStatus.UNKNOWN,
+        type: LogSourceType.ZABIX,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      repo.findOneBy.mockResolvedValue(remoteServer);
+      repo.findOneBy.mockResolvedValue(logSource);
 
       const result = await service.findOne('1', '1');
 
       // Assert
       expect(repo.findOneBy).toHaveBeenCalledTimes(1);
       expect(repo.findOneBy).toHaveBeenCalledWith({ id: '1', ownerId: '1' });
-      expect(result).toEqual(remoteServer);
+      expect(result).toEqual(logSource);
     });
   });
 
   describe('update', () => {
-    it('should update a remote server', async () => {
+    it('should update a log source', async () => {
       // Arrange
-      const remoteServer = {
+      const logSource = {
         id: '1',
-        name: 'Test Server',
-        description: 'A test server',
-        config: { region: 'us-east-1' },
+        name: 'Test Source',
+        description: 'A test source',
+        config: { endpoint: 'http://localhost:8080' },
         ownerId: '1',
-        status: RemoteServerStatus.UNKNOWN,
+        status: LogSourceStatus.UNKNOWN,
+        type: LogSourceType.ZABIX,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      repo.findOneBy.mockResolvedValue(remoteServer);
-      repo.save.mockResolvedValue(remoteServer);
+      repo.findOneBy.mockResolvedValue(logSource);
+      repo.save.mockResolvedValue(logSource);
 
-      const result = await service.update('1', { name: 'Updated Server' }, '1');
+      const result = await service.update('1', { name: 'Updated Source' }, '1');
 
       // Assert
       expect(repo.findOneBy).toHaveBeenCalledTimes(1);
       expect(repo.findOneBy).toHaveBeenCalledWith({ id: '1', ownerId: '1' });
       expect(repo.save).toHaveBeenCalledTimes(1);
       expect(repo.save).toHaveBeenCalledWith({
-        ...remoteServer,
-        name: 'Updated Server',
+        ...logSource,
+        name: 'Updated Source',
       });
-      expect(result).toEqual(remoteServer);
+      expect(result).toEqual(logSource);
     });
 
-    it('should throw NotFoundException if remote server is not found', async () => {
+    it('should throw NotFoundException if log source is not found', async () => {
       // Arrange
       repo.findOneBy.mockResolvedValue(null);
 
       await expect(
-        service.update('1', { name: 'Updated Server' }, '1'),
+        service.update('1', { name: 'Updated Source' }, '1'),
       ).rejects.toThrow(NotFoundException);
 
       // Assert
@@ -175,20 +181,21 @@ describe('RemoteServersService', () => {
   });
 
   describe('remove', () => {
-    it('should remove a remote server', async () => {
+    it('should remove a log source', async () => {
       // Arrange
-      const remoteServer = {
+      const logSource = {
         id: '1',
-        name: 'Test Server',
-        description: 'A test server',
-        config: { region: 'us-east-1' },
+        name: 'Test Source',
+        description: 'A test source',
+        config: { endpoint: 'http://localhost:8080' },
         ownerId: '1',
-        status: RemoteServerStatus.UNKNOWN,
+        status: LogSourceStatus.UNKNOWN,
+        type: LogSourceType.ZABIX,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
       const deleteResult = new DeleteResult();
-      repo.findOneBy.mockResolvedValue(remoteServer);
+      repo.findOneBy.mockResolvedValue(logSource);
       repo.delete.mockResolvedValue(deleteResult);
 
       const result = await service.remove('1', '1');
@@ -201,7 +208,7 @@ describe('RemoteServersService', () => {
       expect(result).toEqual(deleteResult);
     });
 
-    it('should throw NotFoundException if remote server is not found', async () => {
+    it('should throw NotFoundException if log source is not found', async () => {
       // Arrange
       repo.findOneBy.mockResolvedValue(null);
 

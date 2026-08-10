@@ -19,7 +19,7 @@ export class RemoteServersService {
     const remoteServer = this.repo.create({
       ...props,
       ownerId,
-      status: RemoteServerStatus.UNKNOW,
+      status: RemoteServerStatus.UNKNOWN,
     });
     return this.repo.save(remoteServer);
   }
