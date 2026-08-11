@@ -20,21 +20,24 @@ export class LogAnalysisJobsService {
   ) {}
 
   async create(props: CreateLogAnalysisJobDto, ownerId: string) {
-    const logSource = await this.logSourcesService.getById(
-      props.logSourceId,
-      ownerId,
-    );
-
-    const remoteServer = await this.remoteServersService.getById(
+    const remoteServer = await this.remoteServersService.findOne(
       props.remoteServerId,
       ownerId,
     );
+
+    if (!remoteServer) {
+      throw new NotFoundException(`Remote server not found`);
+    }
+
+    const logSource = props.logSourceId
+      ? await this.logSourcesService.findOne(props.logSourceId, ownerId)
+      : null;
 
     const logAnalysisJob = this.repo.create({
       ...props,
       ownerId,
       status: LogAnalysisJobStatus.INITIALIZED,
-      logSource,
+      logSource: logSource ?? undefined,
       remoteServer,
     });
     return this.repo.save(logAnalysisJob);
@@ -48,7 +51,7 @@ export class LogAnalysisJobsService {
     return this.repo.findOneBy({ id, ownerId });
   }
 
-  async getById(id: string, ownerId: string) {
+  private async getById(id: string, ownerId: string) {
     const logAnalysisJob = await this.findOne(id, ownerId);
     if (!logAnalysisJob) {
       throw new NotFoundException(`Log analysis job not found`);

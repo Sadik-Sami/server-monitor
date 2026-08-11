@@ -99,18 +99,19 @@ describe('LogAnalysisJobsService', () => {
         logSource,
         remoteServer,
       };
-      logSourcesService.getById.mockResolvedValue(logSource);
-      remoteServersService.getById.mockResolvedValue(remoteServer);
+      logSourcesService.findOne.mockResolvedValue(logSource);
+      remoteServersService.findOne.mockResolvedValue(remoteServer);
       repo.create.mockReturnValue(created);
       repo.save.mockResolvedValue(created);
 
+      // Act
       const result = await service.create(props, '1');
 
       // Assert
-      expect(logSourcesService.getById).toHaveBeenCalledTimes(1);
-      expect(logSourcesService.getById).toHaveBeenCalledWith('ls-1', '1');
-      expect(remoteServersService.getById).toHaveBeenCalledTimes(1);
-      expect(remoteServersService.getById).toHaveBeenCalledWith('rs-1', '1');
+      expect(logSourcesService.findOne).toHaveBeenCalledTimes(1);
+      expect(logSourcesService.findOne).toHaveBeenCalledWith('ls-1', '1');
+      expect(remoteServersService.findOne).toHaveBeenCalledTimes(1);
+      expect(remoteServersService.findOne).toHaveBeenCalledWith('rs-1', '1');
       expect(repo.create).toHaveBeenCalledTimes(1);
       expect(repo.create).toHaveBeenCalledWith({
         ...props,
@@ -122,6 +123,81 @@ describe('LogAnalysisJobsService', () => {
       expect(repo.save).toHaveBeenCalledTimes(1);
       expect(repo.save).toHaveBeenCalledWith(created);
       expect(result).toEqual(created);
+    });
+
+    it('should not throw NotFoundException if log source is not provided', async () => {
+      // Arrange
+      const props: CreateLogAnalysisJobDto = {
+        name: 'Test Job',
+        description: 'A test job',
+        type: LogAnalysisJobType.ONE_TIME,
+        remoteServerId: 'rs-1',
+      };
+      const remoteServer = {
+        id: 'rs-1',
+        name: 'Test Server',
+        ownerId: '1',
+        description: 'A test server',
+        config: { region: 'us-east-1' },
+        status: 'unknown',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as RemoteServer;
+      const created: LogAnalysisJob = {
+        id: '1',
+        ownerId: '1',
+        name: 'Test Job',
+        description: 'A test job',
+        type: LogAnalysisJobType.ONE_TIME,
+        status: LogAnalysisJobStatus.INITIALIZED,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        remoteServer,
+      };
+      remoteServersService.findOne.mockResolvedValue(remoteServer);
+      repo.create.mockReturnValue(created);
+      repo.save.mockResolvedValue(created);
+
+      // Act
+      const result = await service.create(props, '1');
+
+      // Assert
+      expect(logSourcesService.findOne).not.toHaveBeenCalled();
+      expect(remoteServersService.findOne).toHaveBeenCalledTimes(1);
+      expect(remoteServersService.findOne).toHaveBeenCalledWith('rs-1', '1');
+      expect(repo.create).toHaveBeenCalledTimes(1);
+      expect(repo.create).toHaveBeenCalledWith({
+        ...props,
+        ownerId: '1',
+        status: LogAnalysisJobStatus.INITIALIZED,
+        remoteServer,
+      });
+      expect(repo.save).toHaveBeenCalledTimes(1);
+      expect(result).toEqual(created);
+    });
+
+    it('should throw NotFoundException if remote server is not found', async () => {
+      // Arrange
+      const props: CreateLogAnalysisJobDto = {
+        name: 'Test Job',
+        description: 'A test job',
+        type: LogAnalysisJobType.ONE_TIME,
+        logSourceId: 'ls-1',
+        remoteServerId: 'rs-1',
+      };
+      remoteServersService.findOne.mockResolvedValue(null);
+
+      // Act
+      await expect(service.create(props, '1')).rejects.toThrow(
+        NotFoundException,
+      );
+
+      // Assert
+      expect(remoteServersService.findOne).toHaveBeenCalledTimes(1);
+      expect(remoteServersService.findOne).toHaveBeenCalledWith('rs-1', '1');
+      expect(logSourcesService.findOne).not.toHaveBeenCalled();
+      expect(repo.create).not.toHaveBeenCalled();
+      expect(repo.save).not.toHaveBeenCalled();
     });
   });
 
@@ -144,6 +220,7 @@ describe('LogAnalysisJobsService', () => {
       ];
       repo.find.mockResolvedValue(logAnalysisJobs);
 
+      // Act
       const result = await service.findAll('1');
 
       // Assert
@@ -179,45 +256,6 @@ describe('LogAnalysisJobsService', () => {
     });
   });
 
-  describe('getById', () => {
-    it('should return a log analysis job by id and ownerId', async () => {
-      // Arrange
-      const logAnalysisJob = {
-        id: '1',
-        ownerId: '1',
-        name: 'Test Job',
-        description: 'A test job',
-        type: LogAnalysisJobType.ONE_TIME,
-        status: LogAnalysisJobStatus.INITIALIZED,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        logSource: {} as LogSource,
-        remoteServer: {} as RemoteServer,
-      };
-      repo.findOneBy.mockResolvedValue(logAnalysisJob);
-
-      const result = await service.getById('1', '1');
-
-      // Assert
-      expect(repo.findOneBy).toHaveBeenCalledTimes(1);
-      expect(repo.findOneBy).toHaveBeenCalledWith({ id: '1', ownerId: '1' });
-      expect(result).toEqual(logAnalysisJob);
-    });
-
-    it('should throw NotFoundException if log analysis job is not found', async () => {
-      // Arrange
-      repo.findOneBy.mockResolvedValue(null);
-
-      await expect(service.getById('1', '1')).rejects.toThrow(
-        NotFoundException,
-      );
-
-      // Assert
-      expect(repo.findOneBy).toHaveBeenCalledTimes(1);
-      expect(repo.findOneBy).toHaveBeenCalledWith({ id: '1', ownerId: '1' });
-    });
-  });
-
   describe('update', () => {
     it('should update a log analysis job', async () => {
       // Arrange
@@ -236,6 +274,7 @@ describe('LogAnalysisJobsService', () => {
       repo.findOneBy.mockResolvedValue(logAnalysisJob);
       repo.save.mockResolvedValue(logAnalysisJob);
 
+      // Act
       const result = await service.update('1', { name: 'Updated Job' }, '1');
 
       // Assert
@@ -283,6 +322,7 @@ describe('LogAnalysisJobsService', () => {
       repo.findOneBy.mockResolvedValue(logAnalysisJob);
       repo.delete.mockResolvedValue(deleteResult);
 
+      // Act
       const result = await service.remove('1', '1');
 
       // Assert
@@ -297,6 +337,7 @@ describe('LogAnalysisJobsService', () => {
       // Arrange
       repo.findOneBy.mockResolvedValue(null);
 
+      // Act
       await expect(service.remove('1', '1')).rejects.toThrow(NotFoundException);
 
       // Assert
