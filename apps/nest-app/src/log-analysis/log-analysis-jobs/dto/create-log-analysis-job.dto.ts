@@ -12,6 +12,10 @@ export class CreateLogAnalysisJobDto {
   @IsEnum(LogAnalysisJobType)
   type: LogAnalysisJobType;
 
+  @IsOptional()
+  @IsString()
+  ticketSystemConfig?: Record<string, any>;
+
   @IsString()
   @IsOptional()
   logSourceId?: string;

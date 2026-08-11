@@ -65,6 +65,10 @@ describe('LogAnalysisJobsService', () => {
         name: 'Test Job',
         description: 'A test job',
         type: LogAnalysisJobType.ONE_TIME,
+        ticketSystemConfig: {
+          apiKey: 'test-api-key',
+          apiSecret: 'test-api-secret',
+        },
         logSourceId: 'ls-1',
         remoteServerId: 'rs-1',
       };
