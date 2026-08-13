@@ -5,10 +5,12 @@ import {
   CreateDateColumn,
   Entity,
   JoinColumn,
+  OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Anomaly } from './anomaly.entity';
 
 export enum LogAnalysisJobStatus {
   INITIALIZED = 'INITIALIZED',
@@ -59,4 +61,9 @@ export class LogAnalysisJob {
   @OneToOne(() => RemoteServer)
   @JoinColumn()
   remoteServer: RemoteServer;
+
+  @OneToMany(() => Anomaly, (anomaly) => anomaly.logAnalysisJob, {
+    cascade: true,
+  })
+  anomalies: Anomaly[];
 }
